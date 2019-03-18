@@ -3,8 +3,9 @@ const path = require('path'),
     HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+    mode: 'development',
     entry: {
-        app: ['./src/app/App.ts', 'webpack-hot-middleware/client']
+        app: ['./src/app/index.ts', 'webpack-hot-middleware/client']
         // vendor: ['react', 'react-dom']
     },
     output: {
