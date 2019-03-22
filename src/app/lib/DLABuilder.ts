@@ -4,9 +4,9 @@ import DLAPoint from "./DLAPoint";
 export default class DLABuilder {
   public continueProb: number;
   public lattice: DLALattice;
-  private nextFunctions: Array<Function>;
+  private nextFunctions: Array<() => DLAPoint>;
 
-  constructor(size: number) {
+  constructor(private size: number) {
     this.lattice = new DLALattice(size);
     this.lattice.addParticle(new DLAPoint(0, 0));
     this.continueProb = 0;
@@ -20,12 +20,17 @@ export default class DLABuilder {
 
   public run(onParticleLanded: (point: DLAPoint) => void) {
     while (!this.atMaxSize()) {
-      let point: DLAPoint = this.launchParticle();
+      const point: DLAPoint = this.launchParticle();
 
       if (point) {
         onParticleLanded(point);
       }
     }
+  }
+
+  public reset(): void {
+    this.lattice = new DLALattice(this.size);
+    this.lattice.addParticle(new DLAPoint(0, 0));
   }
 
   public atMaxSize(): boolean {

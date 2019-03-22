@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "0781544af072ce66526d";
+/******/ 	var hotCurrentHash = "75466e13f1d97ac77972";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -2167,9 +2167,22 @@ module.exports = function(module) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const DLABuilder_1 = __webpack_require__(/*! ./lib/DLABuilder */ "./src/app/lib/DLABuilder.ts");
+const DLAView_1 = __webpack_require__(/*! ./lib/DLAView */ "./src/app/lib/DLAView.ts");
 const size = 301;
-const latticeToCanvas = (point) => {
-    return [point.x + Math.floor(size / 2), point.y + Math.floor(size / 2)];
+const start = () => {
+    const container = document.querySelector("dla-component");
+    const view = new DLAView_1.default(container, size);
+    const context = view.getCanvasContext();
+    const builder = new DLABuilder_1.default(size);
+    window.requestAnimationFrame(() => { renderFrame(builder, context); });
+};
+const renderFrame = (builder, context) => {
+    for (let i = 0; i < 50; i++) {
+        launchParticle(builder, context);
+    }
+    if (!builder.atMaxSize()) {
+        window.requestAnimationFrame(() => { renderFrame(builder, context); });
+    }
 };
 const launchParticle = (builder, context) => {
     const point = builder.launchParticle();
@@ -2178,21 +2191,12 @@ const launchParticle = (builder, context) => {
         context.fillRect(canvasX, canvasY, 1, 1);
         const maxRadius = Math.round(builder.lattice.maxRadius);
         const mass = builder.lattice.mass();
-        const summary = document.querySelector("#summary");
+        const summary = document.querySelector(".dla-summary");
         summary.innerText = `Radius: ${maxRadius}, Mass: ${mass}`;
     }
-    if (!builder.atMaxSize()) {
-        window.requestAnimationFrame(() => { launchParticle(builder, context); });
-    }
 };
-const start = () => {
-    const canvas = document.createElement("canvas");
-    canvas.setAttribute("width", String(size));
-    canvas.setAttribute("height", String(size));
-    document.querySelector("#canvas").appendChild(canvas);
-    const context = canvas.getContext("2d");
-    const builder = new DLABuilder_1.default(size);
-    window.requestAnimationFrame(() => { launchParticle(builder, context); });
+const latticeToCanvas = (point) => {
+    return [point.x + Math.floor(size / 2), point.y + Math.floor(size / 2)];
 };
 document.addEventListener("DOMContentLoaded", () => {
     start();
@@ -2384,6 +2388,45 @@ class DLAPoint {
     }
 }
 exports.default = DLAPoint;
+
+
+/***/ }),
+
+/***/ "./src/app/lib/DLAView.ts":
+/*!********************************!*\
+  !*** ./src/app/lib/DLAView.ts ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class DLAView {
+    constructor(container, size) {
+        this.container = container;
+        this.size = size;
+        this.startButton = container.querySelector(".dla-start-button");
+        this.stopButton = container.querySelector(".dla-stop-button");
+        this.resetButton = container.querySelector(".dla-reset-button");
+        this.canvas = container.querySelector("canvas");
+        this.canvas.setAttribute("width", String(this.size));
+        this.canvas.setAttribute("height", String(this.size));
+        this.startButton.addEventListener("click", () => { this.onStart(); });
+        this.stopButton.addEventListener("click", () => { this.onStop(); });
+        this.resetButton.addEventListener("click", () => { this.onReset(); });
+    }
+    getCanvasContext() {
+        return this.canvas.getContext("2d");
+    }
+    onStart() {
+    }
+    onStop() {
+    }
+    onReset() {
+    }
+}
+exports.default = DLAView;
 
 
 /***/ }),
