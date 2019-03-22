@@ -5,20 +5,26 @@ import DLAView from "./DLAView";
 export default class DLAController {
   private context: CanvasRenderingContext2D;
   private state: string;
+  private size: number;
 
   constructor(private builder: DLABuilder, private view: DLAView) {
     this.state = "stopped";
+    this.size = this.view.getSize();
 
     this.view.onStart(this.start.bind(this));
     this.view.onStop(this.stop.bind(this));
     this.view.onReset(this.reset.bind(this));
 
     this.context = this.view.getCanvasContext();
+
+    this.reset();
   }
 
   private start(): void {
-    this.state = "running";
-    window.requestAnimationFrame(() => { this.renderFrame(); });
+    if (this.state !== "running") {
+      this.state = "running";
+      window.requestAnimationFrame(() => { this.renderFrame(); });
+    }
   }
 
   private stop(): void {
@@ -28,7 +34,16 @@ export default class DLAController {
   private reset(): void {
     stop();
     this.builder.reset();
-    this.view.reset();
+    this.renderInitialCanvas();
+  }
+
+  private renderInitialCanvas(): void {
+    this.context.clearRect(0, 0, this.size, this.size);
+
+    this.context.strokeStyle = "rgb(100, 100, 100)";
+    this.context.beginPath();
+    this.context.arc(this.size / 2, this.size / 2, (this.size / 2) - 1, 0, 2 * Math.PI);
+    this.context.stroke();
   }
 
   private renderFrame(): void {
@@ -40,7 +55,9 @@ export default class DLAController {
       this.launchParticle();
     }
 
-    if (!this.builder.atMaxSize()) {
+    if (this.builder.atMaxSize()) {
+      this.stop();
+    } else {
       window.requestAnimationFrame(() => { this.renderFrame(); });
     }
   }
@@ -49,11 +66,14 @@ export default class DLAController {
     const point = this.builder.launchParticle();
 
     if (point) {
-      const [canvasX, canvasY] = this.latticeToCanvas(point);
-      this.context.fillRect(canvasX, canvasY, 1, 1);
-
       const maxRadius = Math.round(this.builder.lattice.maxRadius);
       const mass = this.builder.lattice.mass();
+      const hue = (5000 * mass / (Math.pow(this.size, 2))) % 255;
+      const [canvasX, canvasY] = this.latticeToCanvas(point);
+
+      this.context.fillStyle = `hsl(${hue}, 80%, 30%)`;
+      this.context.fillRect(canvasX, canvasY, 1, 1);
+
       const summary: HTMLDivElement = document.querySelector(".dla-summary");
       summary.innerText = `Radius: ${maxRadius}, Mass: ${mass}`;
     }

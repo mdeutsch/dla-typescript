@@ -32,8 +32,4 @@ export default class DLAView {
   public onReset(listener: EventListener): void {
     this.resetButton.addEventListener("click", listener);
   }
-
-  public reset(): void {
-    this.getCanvasContext().clearRect(0, 0, this.size, this.size);
-  }
 }
