@@ -2,13 +2,18 @@ import DLABuilder from "./DLABuilder";
 import DLAPoint from "./DLAPoint";
 import DLAView from "./DLAView";
 
+enum RunningStatus {
+  Stopped,
+  Running
+}
+
 export default class DLAController {
   private context: CanvasRenderingContext2D;
-  private state: string;
+  private state: RunningStatus;
   private size: number;
 
   constructor(private builder: DLABuilder, private view: DLAView) {
-    this.state = "stopped";
+    this.state = RunningStatus.Stopped;
     this.size = this.view.getSize();
 
     this.view.onStart(this.start.bind(this));
@@ -21,14 +26,14 @@ export default class DLAController {
   }
 
   private start(): void {
-    if (this.state !== "running") {
-      this.state = "running";
+    if (this.state !== RunningStatus.Running) {
+      this.state = RunningStatus.Running;
       window.requestAnimationFrame(() => { this.renderFrame(); });
     }
   }
 
   private stop(): void {
-    this.state = "stopped";
+    this.state = RunningStatus.Stopped;
   }
 
   private reset(): void {
@@ -47,7 +52,7 @@ export default class DLAController {
   }
 
   private renderFrame(): void {
-    if (this.state !== "running") {
+    if (this.state !== RunningStatus.Running) {
       return;
     }
 

@@ -6,9 +6,8 @@ export default class DLABuilder {
   public lattice: DLALattice;
 
   constructor(private size: number) {
-    this.lattice = new DLALattice(size);
-    this.lattice.addParticle(new DLAPoint(0, 0));
     this.continueProb = 0;
+    this.reset();
   }
 
   public run(onParticleLanded: (point: DLAPoint) => void) {

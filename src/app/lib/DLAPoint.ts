@@ -2,10 +2,6 @@ export default class DLAPoint {
   constructor(public x: number, public y: number) {
   }
 
-  public get xy(): number[] {
-    return [this.x, this.y];
-  }
-
   public toString(): string {
     return `(${this.x}, ${this.y})`;
   }

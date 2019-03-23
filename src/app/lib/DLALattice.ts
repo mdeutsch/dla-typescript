@@ -7,8 +7,8 @@ export default class DLALattice {
   public ymax: number;
   public mass: number;
   public maxRadius: number;
-  private locations: any;
-  private adjacents: any;
+  private masses: number[][];
+  private adjacents: boolean[][];
 
   constructor(public size: number) {
     this.xmax = Math.floor(size / 2);
@@ -17,8 +17,13 @@ export default class DLALattice {
     this.ymin = this.xmin;
     this.mass = 0;
     this.maxRadius = 0;
-    this.locations = {};
-    this.adjacents = {};
+
+    this.masses = [];
+    this.adjacents = [];
+    for (let i = this.xmin; i <= this.xmax; i++) {
+      this.masses[i] = [];
+      this.adjacents[i] = [];
+    }
   }
 
   public contains(x: number, y: number): boolean {
@@ -28,15 +33,13 @@ export default class DLALattice {
   public addParticle(point: DLAPoint): DLALattice {
     this.validateLocation(point.x, point.y);
 
-    const [x, y]: number[] = point.xy;
-    const newMass = this.massAt(x, y) + 1;
-
     this.mass++;
-    this.locations[this.locationKey(x, y)] = newMass;
-    this.adjacents[this.locationKey(x - 1, y)] = true;
-    this.adjacents[this.locationKey(x + 1, y)] = true;
-    this.adjacents[this.locationKey(x, y - 1)] = true;
-    this.adjacents[this.locationKey(x, y + 1)] = true;
+    this.masses[point.x][point.y] = this.massAt(point.x, point.y) + 1;
+
+    this.adjacents[point.x - 1][point.y] = true;
+    this.adjacents[point.x + 1][point.y] = true;
+    this.adjacents[point.x][point.y - 1] = true;
+    this.adjacents[point.x][point.y + 1] = true;
     this.maxRadius = Math.max(this.maxRadius, point.absValue());
 
     return this;
@@ -44,16 +47,12 @@ export default class DLALattice {
 
   public massAt(x: number, y: number): number {
     this.validateLocation(x, y);
-    return this.locations[this.locationKey(x, y)] || 0;
+    return this.masses[x][y] || 0;
   }
 
   public isAdjacent(x: number, y: number): boolean {
     this.validateLocation(x, y);
-    return this.adjacents[this.locationKey(x, y)] || false;
-  }
-
-  private locationKey(x: number, y: number): string {
-    return `${x}|${y}`;
+    return this.adjacents[x][y] || false;
   }
 
   private validateLocation(x: number, y: number): void {
