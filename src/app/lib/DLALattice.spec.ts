@@ -20,11 +20,11 @@ describe('constructor', () => {
 });
 
 describe('add()', () => {
-  test('stores the point', () => {
+  test('increases the mass', () => {
     const lattice = new DLALattice(5);
     lattice.addParticle(new DLAPoint(1, 1));
 
-    expect(lattice.getParticle(0)).toStrictEqual(new DLAPoint(1, 1));
+    expect(lattice.mass).toEqual(1);
   });
 
   test('returns the lattice', () => {
@@ -38,7 +38,7 @@ describe('mass()', () => {
   test('is zero for a new lattice', () => {
     const lattice = new DLALattice(5);
 
-    expect(lattice.mass()).toEqual(0);
+    expect(lattice.mass).toEqual(0);
   });
 
   test('is the number of particles', () => {
@@ -47,7 +47,7 @@ describe('mass()', () => {
     lattice.addParticle(new DLAPoint(1, 1));
     lattice.addParticle(new DLAPoint(2, 1));
 
-    expect(lattice.mass()).toEqual(3);
+    expect(lattice.mass).toEqual(3);
   });
 });
 

@@ -6,26 +6,6 @@ describe('toString()', () => {
   });
 });
 
-describe('directions', () => {
-  const initialValue = () => { return new DLAPoint(5, 3); };
-
-  test('up()', () => {
-    expect(initialValue().up()).toStrictEqual(new DLAPoint(5, 2));
-  });
-
-  test('down()', () => {
-    expect(initialValue().down()).toStrictEqual(new DLAPoint(5, 4));
-  });
-
-  test('left()', () => {
-    expect(initialValue().left()).toStrictEqual(new DLAPoint(4, 3));
-  });
-
-  test('right()', () => {
-    expect(initialValue().right()).toStrictEqual(new DLAPoint(6, 3));
-  });
-})
-
 describe('absValue()', () => {
   test('of a positive point', () => {
     expect(new DLAPoint(2, 2).absValue()).toBeCloseTo(Math.sqrt(8), 4);

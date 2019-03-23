@@ -67,7 +67,7 @@ export default class DLAController {
 
     if (point) {
       const maxRadius = Math.round(this.builder.lattice.maxRadius);
-      const mass = this.builder.lattice.mass();
+      const mass = this.builder.lattice.mass;
       const hue = (5000 * mass / (Math.pow(this.size, 2))) % 255;
       const [canvasX, canvasY] = this.latticeToCanvas(point);
 

@@ -5,20 +5,20 @@ export default class DLALattice {
   public xmax: number;
   public ymin: number;
   public ymax: number;
-  private particles: Array<Array<number>>;
+  public mass: number;
+  public maxRadius: number;
   private locations: any;
   private adjacents: any;
-  public maxRadius: number;
 
   constructor(public size: number) {
     this.xmax = Math.floor(size / 2);
     this.xmin = this.xmax - (size - 1);
     this.ymax = this.xmax;
     this.ymin = this.xmin;
-    this.particles = new Array<Array<number>>();
+    this.mass = 0;
+    this.maxRadius = 0;
     this.locations = {};
     this.adjacents = {};
-    this.maxRadius = 0;
   }
 
   public contains(x: number, y: number): boolean {
@@ -31,7 +31,7 @@ export default class DLALattice {
     const [x, y]: number[] = point.xy;
     const newMass = this.massAt(x, y) + 1;
 
-    this.particles.push([x, y]);
+    this.mass++;
     this.locations[this.locationKey(x, y)] = newMass;
     this.adjacents[this.locationKey(x - 1, y)] = true;
     this.adjacents[this.locationKey(x + 1, y)] = true;
@@ -40,15 +40,6 @@ export default class DLALattice {
     this.maxRadius = Math.max(this.maxRadius, point.absValue());
 
     return this;
-  }
-
-  public getParticle(index: number): DLAPoint {
-    const [x, y]: number[] = this.particles[index];
-    return new DLAPoint(x, y);
-  }
-
-  public mass(): number {
-    return this.particles.length;
   }
 
   public massAt(x: number, y: number): number {

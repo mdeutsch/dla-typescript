@@ -4,18 +4,11 @@ import DLAPoint from "./DLAPoint";
 export default class DLABuilder {
   public continueProb: number;
   public lattice: DLALattice;
-  private nextFunctions: Array<() => DLAPoint>;
 
   constructor(private size: number) {
     this.lattice = new DLALattice(size);
     this.lattice.addParticle(new DLAPoint(0, 0));
     this.continueProb = 0;
-    this.nextFunctions = [
-      DLAPoint.prototype.left,
-      DLAPoint.prototype.right,
-      DLAPoint.prototype.up,
-      DLAPoint.prototype.down,
-    ];
   }
 
   public run(onParticleLanded: (point: DLAPoint) => void) {
@@ -44,7 +37,7 @@ export default class DLABuilder {
     let particleLanded: boolean = false;
 
     while (!particleIsDone) {
-      next = this.nextFunctions[Math.floor(Math.random() * 4)].bind(position)();
+      next = this.randomNextPoint(position);
 
       if (next.absValue() > (3 * this.lattice.maxRadius) + 20) {
         particleIsDone = true;
@@ -69,5 +62,18 @@ export default class DLABuilder {
     const y: number = Math.round(radius * Math.sin(theta));
 
     return new DLAPoint(x, y);
+  }
+
+  private randomNextPoint(point: DLAPoint): DLAPoint {
+    switch(Math.floor(Math.random() * 4)) {
+      case 0:
+        return new DLAPoint(point.x - 1, point.y);
+      case 1:
+        return new DLAPoint(point.x + 1, point.y);
+      case 2:
+        return new DLAPoint(point.x, point.y - 1);
+      case 3:
+        return new DLAPoint(point.x, point.y + 1);
+    }
   }
 }

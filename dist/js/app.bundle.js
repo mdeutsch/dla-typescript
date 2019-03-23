@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "39fbd18dc43ac3530088";
+/******/ 	var hotCurrentHash = "4053712307f4cc954de6";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -981,22 +981,6 @@ ansiHTML.reset()
 
 /***/ }),
 
-/***/ "./node_modules/ansi-regex/index.js":
-/*!******************************************!*\
-  !*** ./node_modules/ansi-regex/index.js ***!
-  \******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = function () {
-	return /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
-};
-
-
-/***/ }),
-
 /***/ "./node_modules/html-entities/index.js":
 /*!*********************************************!*\
   !*** ./node_modules/html-entities/index.js ***!
@@ -1548,10 +1532,26 @@ module.exports = XmlEntities;
 
 "use strict";
 
-var ansiRegex = __webpack_require__(/*! ansi-regex */ "./node_modules/ansi-regex/index.js")();
+var ansiRegex = __webpack_require__(/*! ansi-regex */ "./node_modules/strip-ansi/node_modules/ansi-regex/index.js")();
 
 module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/strip-ansi/node_modules/ansi-regex/index.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/strip-ansi/node_modules/ansi-regex/index.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function () {
+	return /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
 };
 
 
@@ -2202,12 +2202,6 @@ class DLABuilder {
         this.lattice = new DLALattice_1.default(size);
         this.lattice.addParticle(new DLAPoint_1.default(0, 0));
         this.continueProb = 0;
-        this.nextFunctions = [
-            DLAPoint_1.default.prototype.left,
-            DLAPoint_1.default.prototype.right,
-            DLAPoint_1.default.prototype.up,
-            DLAPoint_1.default.prototype.down,
-        ];
     }
     run(onParticleLanded) {
         while (!this.atMaxSize()) {
@@ -2230,7 +2224,7 @@ class DLABuilder {
         let particleIsDone = false;
         let particleLanded = false;
         while (!particleIsDone) {
-            next = this.nextFunctions[Math.floor(Math.random() * 4)].bind(position)();
+            next = this.randomNextPoint(position);
             if (next.absValue() > (3 * this.lattice.maxRadius) + 20) {
                 particleIsDone = true;
             }
@@ -2253,6 +2247,18 @@ class DLABuilder {
         const x = Math.round(radius * Math.cos(theta));
         const y = Math.round(radius * Math.sin(theta));
         return new DLAPoint_1.default(x, y);
+    }
+    randomNextPoint(point) {
+        switch (Math.floor(Math.random() * 4)) {
+            case 0:
+                return new DLAPoint_1.default(point.x - 1, point.y);
+            case 1:
+                return new DLAPoint_1.default(point.x + 1, point.y);
+            case 2:
+                return new DLAPoint_1.default(point.x, point.y - 1);
+            case 3:
+                return new DLAPoint_1.default(point.x, point.y + 1);
+        }
     }
 }
 exports.default = DLABuilder;
@@ -2300,7 +2306,7 @@ class DLAController {
         this.context.clearRect(0, 0, this.size, this.size);
         this.context.strokeStyle = "rgb(100, 100, 100)";
         this.context.beginPath();
-        this.context.arc(this.size / 2, this.size / 2, (this.size / 2), 0, 2 * Math.PI);
+        this.context.arc(this.size / 2, this.size / 2, (this.size / 2) - 1, 0, 2 * Math.PI);
         this.context.stroke();
     }
     renderFrame() {
@@ -2321,7 +2327,7 @@ class DLAController {
         const point = this.builder.launchParticle();
         if (point) {
             const maxRadius = Math.round(this.builder.lattice.maxRadius);
-            const mass = this.builder.lattice.mass();
+            const mass = this.builder.lattice.mass;
             const hue = (5000 * mass / (Math.pow(this.size, 2))) % 255;
             const [canvasX, canvasY] = this.latticeToCanvas(point);
             this.context.fillStyle = `hsl(${hue}, 80%, 30%)`;
@@ -2350,7 +2356,6 @@ exports.default = DLAController;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const DLAPoint_1 = __webpack_require__(/*! ./DLAPoint */ "./src/app/lib/DLAPoint.ts");
 class DLALattice {
     constructor(size) {
         this.size = size;
@@ -2358,10 +2363,10 @@ class DLALattice {
         this.xmin = this.xmax - (size - 1);
         this.ymax = this.xmax;
         this.ymin = this.xmin;
-        this.particles = new Array();
+        this.mass = 0;
+        this.maxRadius = 0;
         this.locations = {};
         this.adjacents = {};
-        this.maxRadius = 0;
     }
     contains(x, y) {
         return x >= this.xmin && x <= this.xmax && y >= this.ymin && y <= this.ymax;
@@ -2370,7 +2375,7 @@ class DLALattice {
         this.validateLocation(point.x, point.y);
         const [x, y] = point.xy;
         const newMass = this.massAt(x, y) + 1;
-        this.particles.push([x, y]);
+        this.mass++;
         this.locations[this.locationKey(x, y)] = newMass;
         this.adjacents[this.locationKey(x - 1, y)] = true;
         this.adjacents[this.locationKey(x + 1, y)] = true;
@@ -2378,13 +2383,6 @@ class DLALattice {
         this.adjacents[this.locationKey(x, y + 1)] = true;
         this.maxRadius = Math.max(this.maxRadius, point.absValue());
         return this;
-    }
-    getParticle(index) {
-        const [x, y] = this.particles[index];
-        return new DLAPoint_1.default(x, y);
-    }
-    mass() {
-        return this.particles.length;
     }
     massAt(x, y) {
         this.validateLocation(x, y);
@@ -2431,18 +2429,6 @@ class DLAPoint {
     }
     toString() {
         return `(${this.x}, ${this.y})`;
-    }
-    left() {
-        return new DLAPoint(this.x - 1, this.y);
-    }
-    right() {
-        return new DLAPoint(this.x + 1, this.y);
-    }
-    up() {
-        return new DLAPoint(this.x, this.y - 1);
-    }
-    down() {
-        return new DLAPoint(this.x, this.y + 1);
     }
     absValue() {
         return Math.sqrt((this.x * this.x) + (this.y * this.y));
