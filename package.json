@@ -5,8 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build": "./node_modules/.bin/webpack",
-    "start": "npm run build && node server.js",
-    "test": "jest"
+    "watch": "./node_modules/.bin/webpack --watch",
+    "server": "node server.js",
+    "start": "yarn run build && yarn run server",
+    "test": "jest",
+    "docker-build": "docker build -t mdeutsch/dla-ts .",
+    "docker-run": "docker run -d --rm -p 9000:9000 mdeutsch/dla-ts && sleep 1 && open http://localhost:9000",
+    "docker-stop": "docker container ls -f ancestor=mdeutsch/dla-ts -q | xargs docker stop"
   },
   "keywords": [],
   "author": "",
