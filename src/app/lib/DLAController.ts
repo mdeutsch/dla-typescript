@@ -74,12 +74,13 @@ export default class DLAController {
     if (point) {
       const maxRadius = Math.round(this.builder.lattice.maxRadius);
       const mass = this.builder.lattice.mass;
+      const dimension = Math.round(Math.log(mass) / Math.log(maxRadius) * 100) / 100;
       const hue = (5000 * mass / (Math.pow(this.size, 2))) % 255;
       const [canvasX, canvasY] = this.latticeToCanvas(point);
 
       this.context.fillStyle = `hsl(${hue}, 80%, 30%)`;
       this.context.fillRect(canvasX, canvasY, 1, 1);
-      this.view.setSummary(`Radius: ${maxRadius}, Mass: ${mass}`);
+      this.view.setSummary(`Mass: ${mass}<br/>max(R): ${maxRadius}<br/>D = ${dimension}`);
     }
   }
 

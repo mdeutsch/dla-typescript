@@ -23,8 +23,8 @@ export default class DLAView {
     return this.canvas.getContext("2d");
   }
 
-  public setSummary(text: string): DLAView {
-    this.summary.innerText = text;
+  public setSummary(html: string): DLAView {
+    this.summary.innerHTML = html;
     return this;
   }
 
