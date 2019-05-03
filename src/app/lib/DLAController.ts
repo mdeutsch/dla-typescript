@@ -40,6 +40,7 @@ export default class DLAController {
     stop();
     this.builder.reset();
     this.renderInitialCanvas();
+    this.view.setSummary(null);
   }
 
   private renderInitialCanvas(): void {
@@ -78,9 +79,7 @@ export default class DLAController {
 
       this.context.fillStyle = `hsl(${hue}, 80%, 30%)`;
       this.context.fillRect(canvasX, canvasY, 1, 1);
-
-      const summary: HTMLDivElement = document.querySelector(".dla-summary");
-      summary.innerText = `Radius: ${maxRadius}, Mass: ${mass}`;
+      this.view.setSummary(`Radius: ${maxRadius}, Mass: ${mass}`);
     }
   }
 

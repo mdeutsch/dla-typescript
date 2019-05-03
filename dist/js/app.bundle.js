@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "4053712307f4cc954de6";
+/******/ 	var hotCurrentHash = "dbbb72a356dff96b2f58";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -981,6 +981,22 @@ ansiHTML.reset()
 
 /***/ }),
 
+/***/ "./node_modules/ansi-regex/index.js":
+/*!******************************************!*\
+  !*** ./node_modules/ansi-regex/index.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function () {
+	return /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
+};
+
+
+/***/ }),
+
 /***/ "./node_modules/html-entities/index.js":
 /*!*********************************************!*\
   !*** ./node_modules/html-entities/index.js ***!
@@ -1532,26 +1548,10 @@ module.exports = XmlEntities;
 
 "use strict";
 
-var ansiRegex = __webpack_require__(/*! ansi-regex */ "./node_modules/strip-ansi/node_modules/ansi-regex/index.js")();
+var ansiRegex = __webpack_require__(/*! ansi-regex */ "./node_modules/ansi-regex/index.js")();
 
 module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
-};
-
-
-/***/ }),
-
-/***/ "./node_modules/strip-ansi/node_modules/ansi-regex/index.js":
-/*!******************************************************************!*\
-  !*** ./node_modules/strip-ansi/node_modules/ansi-regex/index.js ***!
-  \******************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = function () {
-	return /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
 };
 
 
@@ -2184,6 +2184,46 @@ if (true) {
 
 /***/ }),
 
+/***/ "./src/app/lib/DLABounds.ts":
+/*!**********************************!*\
+  !*** ./src/app/lib/DLABounds.ts ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class DLABounds {
+    constructor(xmin, xmax, ymin, ymax) {
+        if (xmin <= xmax) {
+            [this.xmin, this.xmax] = [xmin, xmax];
+        }
+        else {
+            [this.xmin, this.xmax] = [xmax, xmin];
+        }
+        if (ymin <= ymax) {
+            [this.ymin, this.ymax] = [ymin, ymax];
+        }
+        else {
+            [this.ymin, this.ymax] = [ymax, ymin];
+        }
+    }
+    contains(x, y) {
+        return this.containsX(x) && this.containsY(y);
+    }
+    containsX(x) {
+        return x >= this.xmin && x <= this.xmax;
+    }
+    containsY(y) {
+        return y >= this.ymin && y <= this.ymax;
+    }
+}
+exports.default = DLABounds;
+
+
+/***/ }),
+
 /***/ "./src/app/lib/DLABuilder.ts":
 /*!***********************************!*\
   !*** ./src/app/lib/DLABuilder.ts ***!
@@ -2199,9 +2239,8 @@ const DLAPoint_1 = __webpack_require__(/*! ./DLAPoint */ "./src/app/lib/DLAPoint
 class DLABuilder {
     constructor(size) {
         this.size = size;
-        this.lattice = new DLALattice_1.default(size);
-        this.lattice.addParticle(new DLAPoint_1.default(0, 0));
         this.continueProb = 0;
+        this.reset();
     }
     run(onParticleLanded) {
         while (!this.atMaxSize()) {
@@ -2276,11 +2315,16 @@ exports.default = DLABuilder;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var RunningStatus;
+(function (RunningStatus) {
+    RunningStatus[RunningStatus["Stopped"] = 0] = "Stopped";
+    RunningStatus[RunningStatus["Running"] = 1] = "Running";
+})(RunningStatus || (RunningStatus = {}));
 class DLAController {
     constructor(builder, view) {
         this.builder = builder;
         this.view = view;
-        this.state = "stopped";
+        this.state = RunningStatus.Stopped;
         this.size = this.view.getSize();
         this.view.onStart(this.start.bind(this));
         this.view.onStop(this.stop.bind(this));
@@ -2289,13 +2333,13 @@ class DLAController {
         this.reset();
     }
     start() {
-        if (this.state !== "running") {
-            this.state = "running";
+        if (this.state !== RunningStatus.Running) {
+            this.state = RunningStatus.Running;
             window.requestAnimationFrame(() => { this.renderFrame(); });
         }
     }
     stop() {
-        this.state = "stopped";
+        this.state = RunningStatus.Stopped;
     }
     reset() {
         stop();
@@ -2310,7 +2354,7 @@ class DLAController {
         this.context.stroke();
     }
     renderFrame() {
-        if (this.state !== "running") {
+        if (this.state !== RunningStatus.Running) {
             return;
         }
         for (let i = 0; i < 10; i++) {
@@ -2356,55 +2400,93 @@ exports.default = DLAController;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const DLABounds_1 = __webpack_require__(/*! ./DLABounds */ "./src/app/lib/DLABounds.ts");
+const DLAOffsetMatrix_1 = __webpack_require__(/*! ./DLAOffsetMatrix */ "./src/app/lib/DLAOffsetMatrix.ts");
 class DLALattice {
     constructor(size) {
         this.size = size;
-        this.xmax = Math.floor(size / 2);
-        this.xmin = this.xmax - (size - 1);
-        this.ymax = this.xmax;
-        this.ymin = this.xmin;
+        const upperBound = Math.floor(size / 2);
+        const lowerBound = upperBound - (size - 1);
+        this.bounds = new DLABounds_1.default(lowerBound, upperBound, lowerBound, upperBound);
+        const adjacentBounds = new DLABounds_1.default(lowerBound - 1, upperBound + 1, lowerBound - 1, upperBound + 1);
         this.mass = 0;
         this.maxRadius = 0;
-        this.locations = {};
-        this.adjacents = {};
+        this.masses = new DLAOffsetMatrix_1.default(this.bounds, 0);
+        this.adjacents = new DLAOffsetMatrix_1.default(adjacentBounds, false);
     }
     contains(x, y) {
-        return x >= this.xmin && x <= this.xmax && y >= this.ymin && y <= this.ymax;
+        return this.masses.contains(x, y);
     }
     addParticle(point) {
-        this.validateLocation(point.x, point.y);
-        const [x, y] = point.xy;
-        const newMass = this.massAt(x, y) + 1;
         this.mass++;
-        this.locations[this.locationKey(x, y)] = newMass;
-        this.adjacents[this.locationKey(x - 1, y)] = true;
-        this.adjacents[this.locationKey(x + 1, y)] = true;
-        this.adjacents[this.locationKey(x, y - 1)] = true;
-        this.adjacents[this.locationKey(x, y + 1)] = true;
+        this.masses.set(point.x, point.y, this.massAt(point.x, point.y) + 1);
+        this.adjacents.set(point.x - 1, point.y, true);
+        this.adjacents.set(point.x + 1, point.y, true);
+        this.adjacents.set(point.x, point.y - 1, true);
+        this.adjacents.set(point.x, point.y + 1, true);
         this.maxRadius = Math.max(this.maxRadius, point.absValue());
         return this;
     }
     massAt(x, y) {
-        this.validateLocation(x, y);
-        return this.locations[this.locationKey(x, y)] || 0;
+        return this.masses.get(x, y);
     }
     isAdjacent(x, y) {
-        this.validateLocation(x, y);
-        return this.adjacents[this.locationKey(x, y)] || false;
-    }
-    locationKey(x, y) {
-        return `${x}|${y}`;
-    }
-    validateLocation(x, y) {
-        if (x < this.xmin || x > this.xmax) {
-            throw `x = ${x} must be in [${this.xmin}, ${this.xmax}]`;
-        }
-        else if (y < this.ymin || y > this.ymax) {
-            throw `y = ${y} must be in [${this.ymin}, ${this.ymax}]`;
-        }
+        return this.adjacents.get(x, y);
     }
 }
 exports.default = DLALattice;
+
+
+/***/ }),
+
+/***/ "./src/app/lib/DLAOffsetMatrix.ts":
+/*!****************************************!*\
+  !*** ./src/app/lib/DLAOffsetMatrix.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class DLAOffsetMatrix {
+    constructor(bounds, initialValue) {
+        this.bounds = bounds;
+        this.initialValue = initialValue;
+        this.data = [];
+        for (let x = 0; x <= bounds.xmax - bounds.xmin; x++) {
+            this.data[x] = [];
+            for (let y = 0; y <= bounds.ymax - bounds.ymin; y++) {
+                this.data[x][y] = initialValue;
+            }
+        }
+    }
+    get(worldX, worldY) {
+        this.validate_location(worldX, worldY);
+        const [localX, localY] = this.world_to_local(worldX, worldY);
+        return this.data[localX][localY];
+    }
+    set(worldX, worldY, value) {
+        this.validate_location(worldX, worldY);
+        const [localX, localY] = this.world_to_local(worldX, worldY);
+        return this.data[localX][localY] = value;
+    }
+    contains(worldX, worldY) {
+        return this.bounds.contains(worldX, worldY);
+    }
+    world_to_local(worldX, worldY) {
+        return [worldX - this.bounds.xmin, worldY - this.bounds.ymin];
+    }
+    validate_location(worldX, worldY) {
+        if (!this.bounds.containsX(worldX)) {
+            throw new Error(`worldX = ${worldX} must be in [${this.bounds.xmin}, ${this.bounds.xmax}]`);
+        }
+        else if (!this.bounds.containsY(worldY)) {
+            throw new Error(`worldY = ${worldY} must be in [${this.bounds.ymin}, ${this.bounds.ymax}]`);
+        }
+    }
+}
+exports.default = DLAOffsetMatrix;
 
 
 /***/ }),
@@ -2423,9 +2505,6 @@ class DLAPoint {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-    }
-    get xy() {
-        return [this.x, this.y];
     }
     toString() {
         return `(${this.x}, ${this.y})`;

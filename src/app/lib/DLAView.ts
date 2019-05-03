@@ -3,11 +3,13 @@ export default class DLAView {
   private stopButton: Element;
   private resetButton: Element;
   private canvas: HTMLCanvasElement;
+  private summary: HTMLDivElement;
 
   constructor(private container: Element, private size: number) {
     this.startButton = container.querySelector(".dla-start-button");
     this.stopButton = container.querySelector(".dla-stop-button");
     this.resetButton = container.querySelector(".dla-reset-button");
+    this.summary = container.querySelector(".dla-summary");
     this.canvas = container.querySelector("canvas");
     this.canvas.setAttribute("width", String(this.size));
     this.canvas.setAttribute("height", String(this.size));
@@ -19,6 +21,11 @@ export default class DLAView {
 
   public getCanvasContext(): CanvasRenderingContext2D {
     return this.canvas.getContext("2d");
+  }
+
+  public setSummary(text: string): DLAView {
+    this.summary.innerText = text;
+    return this;
   }
 
   public onStart(listener: EventListener): void {

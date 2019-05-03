@@ -1,65 +1,48 @@
+import DLABounds from "./DLABounds";
+import DLAOffsetMatrix from "./DLAOffsetMatrix";
 import DLAPoint from "./DLAPoint";
 
 export default class DLALattice {
-  public xmin: number;
-  public xmax: number;
-  public ymin: number;
-  public ymax: number;
+  public bounds: DLABounds;
   public mass: number;
   public maxRadius: number;
-  private masses: number[][];
-  private adjacents: boolean[][];
+  private masses: DLAOffsetMatrix<number>;
+  private adjacents: DLAOffsetMatrix<boolean>;
 
   constructor(public size: number) {
-    this.xmax = Math.floor(size / 2);
-    this.xmin = this.xmax - (size - 1);
-    this.ymax = this.xmax;
-    this.ymin = this.xmin;
+    const upperBound = Math.floor(size / 2);
+    const lowerBound = upperBound - (size - 1);
+    this.bounds = new DLABounds(lowerBound, upperBound, lowerBound, upperBound);
+    const adjacentBounds = new DLABounds(lowerBound - 1, upperBound + 1, lowerBound - 1, upperBound + 1);
+
     this.mass = 0;
     this.maxRadius = 0;
-
-    this.masses = [];
-    this.adjacents = [];
-    for (let i = this.xmin; i <= this.xmax; i++) {
-      this.masses[i] = [];
-      this.adjacents[i] = [];
-    }
+    this.masses = new DLAOffsetMatrix<number>(this.bounds, 0);
+    this.adjacents = new DLAOffsetMatrix<boolean>(adjacentBounds, false);
   }
 
   public contains(x: number, y: number): boolean {
-    return x >= this.xmin && x <= this.xmax && y >= this.ymin && y <= this.ymax;
+    return this.masses.contains(x, y);
   }
 
   public addParticle(point: DLAPoint): DLALattice {
-    this.validateLocation(point.x, point.y);
-
     this.mass++;
-    this.masses[point.x][point.y] = this.massAt(point.x, point.y) + 1;
+    this.masses.set(point.x, point.y, this.massAt(point.x, point.y) + 1);
 
-    this.adjacents[point.x - 1][point.y] = true;
-    this.adjacents[point.x + 1][point.y] = true;
-    this.adjacents[point.x][point.y - 1] = true;
-    this.adjacents[point.x][point.y + 1] = true;
+    this.adjacents.set(point.x - 1, point.y, true);
+    this.adjacents.set(point.x + 1, point.y, true);
+    this.adjacents.set(point.x, point.y - 1, true);
+    this.adjacents.set(point.x, point.y + 1, true);
     this.maxRadius = Math.max(this.maxRadius, point.absValue());
 
     return this;
   }
 
   public massAt(x: number, y: number): number {
-    this.validateLocation(x, y);
-    return this.masses[x][y] || 0;
+    return this.masses.get(x, y);
   }
 
   public isAdjacent(x: number, y: number): boolean {
-    this.validateLocation(x, y);
-    return this.adjacents[x][y] || false;
-  }
-
-  private validateLocation(x: number, y: number): void {
-    if (x < this.xmin || x > this.xmax) {
-      throw `x = ${x} must be in [${this.xmin}, ${this.xmax}]`
-    } else if (y < this.ymin || y > this.ymax) {
-      throw `y = ${y} must be in [${this.ymin}, ${this.ymax}]`
-    }
+    return this.adjacents.get(x, y);
   }
 }
