@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "dbbb72a356dff96b2f58";
+/******/ 	var hotCurrentHash = "db58628192c5aa0a59be";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -2345,6 +2345,7 @@ class DLAController {
         stop();
         this.builder.reset();
         this.renderInitialCanvas();
+        this.view.setSummary(null);
     }
     renderInitialCanvas() {
         this.context.clearRect(0, 0, this.size, this.size);
@@ -2372,12 +2373,12 @@ class DLAController {
         if (point) {
             const maxRadius = Math.round(this.builder.lattice.maxRadius);
             const mass = this.builder.lattice.mass;
+            const dimension = Math.round(Math.log(mass) / Math.log(maxRadius) * 100) / 100;
             const hue = (5000 * mass / (Math.pow(this.size, 2))) % 255;
             const [canvasX, canvasY] = this.latticeToCanvas(point);
             this.context.fillStyle = `hsl(${hue}, 80%, 30%)`;
             this.context.fillRect(canvasX, canvasY, 1, 1);
-            const summary = document.querySelector(".dla-summary");
-            summary.innerText = `Radius: ${maxRadius}, Mass: ${mass}`;
+            this.view.setSummary(`Mass: ${mass}<br/>max(R): ${maxRadius}<br/>D = ${dimension}`);
         }
     }
     latticeToCanvas(point) {
@@ -2535,6 +2536,7 @@ class DLAView {
         this.startButton = container.querySelector(".dla-start-button");
         this.stopButton = container.querySelector(".dla-stop-button");
         this.resetButton = container.querySelector(".dla-reset-button");
+        this.summary = container.querySelector(".dla-summary");
         this.canvas = container.querySelector("canvas");
         this.canvas.setAttribute("width", String(this.size));
         this.canvas.setAttribute("height", String(this.size));
@@ -2544,6 +2546,10 @@ class DLAView {
     }
     getCanvasContext() {
         return this.canvas.getContext("2d");
+    }
+    setSummary(html) {
+        this.summary.innerHTML = html;
+        return this;
     }
     onStart(listener) {
         this.startButton.addEventListener("click", listener);
